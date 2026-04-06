@@ -192,31 +192,64 @@ def egfr_stage(egfr):
     else: return 5
 
 def preprocess(inp):
-    binary_map = {"yes":1,"no":0,"normal":1,"abnormal":0,"present":1,"not present":0,"good":1,"poor":0}
-    activity_map = {"high":0,"low":1,"moderate":2}
-    sediment_map = {"abnormal":0,"normal":1}
-    smoke_map    = {"no":0,"yes":1}
+    # Encoding maps must match training notebook exactly (LabelEncoder = alphabetical order)
+    b            = {"yes":1,"no":0,"normal":1,"abnormal":0,"present":1,"not present":0,"good":1,"poor":0}
+    activity_map = {"high":0,"low":1,"moderate":2}   # alphabetical
+    sediment_map = {"abnormal":0,"normal":1}           # alphabetical
+    smoke_map    = {"no":0,"yes":1}                    # alphabetical
 
+    comorbidity = b[inp["htn"]] + b[inp["dm"]] + b[inp["cad"]] + b[inp["ane"]] + b[inp["pe"]]
+
+    # EXACT feature order from training (46 features) — do NOT reorder
     row = [
-        inp["age"], inp["bp"], inp["sg"], inp["albumin"], inp["sugar"],
-        binary_map[inp["rbc"]], binary_map[inp["pc"]], binary_map[inp["pcc"]],
-        binary_map[inp["ba"]], inp["bgr"], inp["bu"], inp["sc"], inp["sod"],
-        inp["pot"], inp["hemo"], inp["pcv"], inp["wbc"], inp["rbcc"],
-        binary_map[inp["htn"]], binary_map[inp["dm"]], binary_map[inp["cad"]],
-        binary_map[inp["appet"]], binary_map[inp["pe"]], binary_map[inp["ane"]],
-        inp["egfr"], inp["upcr"], inp["uo"], inp["sal"], inp["chol"],
-        inp["pth"], inp["ca"], inp["phos"], binary_map[inp["fh"]],
-        smoke_map[inp["smoke"]], inp["bmi"],
-        activity_map[inp["activity"]], inp["dm_dur"], inp["htn_dur"],
-        inp["cystatin"], sediment_map[inp["sediment"]], inp["crp"], inp["il6"],
-        # Engineered features
-        egfr_stage(inp["egfr"]),
-        binary_map[inp["htn"]] + binary_map[inp["dm"]] + binary_map[inp["cad"]] +
-            binary_map[inp["ane"]] + binary_map[inp["pe"]],
-        inp["sc"] / (inp["bu"] + 1e-5),
-        inp["bp"] / (inp["bgr"] + 1e-5),
+        inp["age"],                       # [0]  Age of the patient
+        inp["bp"],                        # [1]  Blood pressure
+        inp["sg"],                        # [2]  Specific gravity
+        inp["albumin"],                   # [3]  Albumin in urine
+        inp["sugar"],                     # [4]  Sugar in urine
+        b[inp["rbc"]],                    # [5]  Red blood cells in urine
+        b[inp["pc"]],                     # [6]  Pus cells in urine
+        b[inp["pcc"]],                    # [7]  Pus cell clumps
+        b[inp["ba"]],                     # [8]  Bacteria in urine
+        inp["bgr"],                       # [9]  Blood glucose
+        inp["bu"],                        # [10] Blood urea
+        inp["sc"],                        # [11] Serum creatinine
+        inp["sod"],                       # [12] Sodium
+        inp["pot"],                       # [13] Potassium
+        inp["hemo"],                      # [14] Hemoglobin
+        inp["pcv"],                       # [15] Packed cell volume
+        inp["wbc"],                       # [16] WBC count
+        inp["rbcc"],                      # [17] RBC count
+        b[inp["htn"]],                    # [18] Hypertension
+        b[inp["dm"]],                     # [19] Diabetes mellitus
+        b[inp["cad"]],                    # [20] Coronary artery disease
+        b[inp["appet"]],                  # [21] Appetite
+        b[inp["pe"]],                     # [22] Pedal edema
+        b[inp["ane"]],                    # [23] Anemia
+        inp["egfr"],                      # [24] eGFR
+        inp["upcr"],                      # [25] Urine protein:creatinine ratio
+        inp["uo"],                        # [26] Urine output
+        inp["sal"],                       # [27] Serum albumin
+        inp["chol"],                      # [28] Cholesterol
+        inp["pth"],                       # [29] PTH level
+        inp["ca"],                        # [30] Serum calcium
+        inp["phos"],                      # [31] Serum phosphate
+        b[inp["fh"]],                     # [32] Family history CKD
+        smoke_map[inp["smoke"]],          # [33] Smoking status
+        inp["bmi"],                       # [34] BMI
+        activity_map[inp["activity"]],    # [35] Physical activity level
+        inp["dm_dur"],                    # [36] Duration of diabetes
+        inp["htn_dur"],                   # [37] Duration of hypertension
+        inp["cystatin"],                  # [38] Cystatin C
+        sediment_map[inp["sediment"]],    # [39] Urinary sediment microscopy
+        inp["crp"],                       # [40] CRP level
+        inp["il6"],                       # [41] IL-6 level
+        egfr_stage(inp["egfr"]),          # [42] eGFR_CKD_Stage        (engineered)
+        comorbidity,                      # [43] Comorbidity_Score      (engineered)
+        inp["sc"] / (inp["bu"] + 1e-5),   # [44] Creatinine_Urea_Ratio  (engineered)
+        inp["bp"] / (inp["bgr"] + 1e-5),  # [45] BP_Glucose_Ratio       (engineered)
     ]
-    return np.array(row).reshape(1, -1)
+    return np.array(row, dtype=float).reshape(1, -1)
 
 # ── Hero ───────────────────────────────────────────────────────────────────────
 st.markdown("""
