@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import numpy as np
 import joblib
@@ -157,8 +158,9 @@ hr { border-color:#21262d !important; }
 # ── Load model ─────────────────────────────────────────────────────────────────
 @st.cache_resource
 def load_model():
-    model  = joblib.load("kidney_disease_model.pkl")
-    scaler = joblib.load("kidney_scaler.pkl")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    model  = joblib.load(os.path.join(base_dir, "kidney_disease_model.pkl"))
+    scaler = joblib.load(os.path.join(base_dir, "kidney_scaler.pkl"))
     return model, scaler
 
 try:
