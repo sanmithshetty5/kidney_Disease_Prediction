@@ -38,10 +38,37 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------- TITLE --------------------
-st.title("🧠 Kidney Disease Prediction")
-st.write("Enter all patient details")
+st.title("🧠 Kidney Disease Prediction System")
+st.write("Fill in patient medical details below")
 
-# -------------------- FEATURE LIST (24 FEATURES) --------------------
+# -------------------- FEATURE MAP (FULL NAMES) --------------------
+feature_labels = {
+    'age': "Age",
+    'bp': "Blood Pressure (mm Hg)",
+    'sg': "Specific Gravity",
+    'al': "Albumin",
+    'su': "Sugar",
+    'rbc': "Red Blood Cells",
+    'pc': "Pus Cells",
+    'pcc': "Pus Cell Clumps",
+    'ba': "Bacteria",
+    'bgr': "Blood Glucose Random",
+    'bu': "Blood Urea",
+    'sc': "Serum Creatinine",
+    'sod': "Sodium",
+    'pot': "Potassium",
+    'hemo': "Hemoglobin",
+    'pcv': "Packed Cell Volume",
+    'wc': "White Blood Cell Count",
+    'rc': "Red Blood Cell Count",
+    'htn': "Hypertension",
+    'dm': "Diabetes Mellitus",
+    'cad': "Coronary Artery Disease",
+    'appet': "Appetite",
+    'pe': "Pedal Edema",
+    'ane': "Anemia"
+}
+
 numeric_features = [
     'age','bp','sg','al','su','bgr','bu','sc',
     'sod','pot','hemo','pcv','wc','rc'
@@ -51,44 +78,41 @@ categorical_features = [
     'rbc','pc','pcc','ba','htn','dm','cad','appet','pe','ane'
 ]
 
-# sanity check
-st.caption(f"Total Features = {len(numeric_features) + len(categorical_features)} (should be 24)")
-
 # -------------------- INPUT UI --------------------
 input_data = {}
 
-st.subheader("📊 Numeric Inputs")
+# 🔹 Numeric Section
+st.subheader("📊 Vital & Blood Test Parameters")
 col1, col2 = st.columns(2)
 
 for i, feature in enumerate(numeric_features):
+    label = feature_labels[feature]
     if i % 2 == 0:
-        input_data[feature] = col1.number_input(feature.upper(), value=0.0)
+        input_data[feature] = col1.number_input(label, value=0.0)
     else:
-        input_data[feature] = col2.number_input(feature.upper(), value=0.0)
+        input_data[feature] = col2.number_input(label, value=0.0)
 
-st.subheader("🧬 Categorical Inputs")
+# 🔹 Categorical Section
+st.subheader("🧬 Medical Conditions & Urine Analysis")
 
 for feature in categorical_features:
+    label = feature_labels[feature]
     options = list(encoders[feature].classes_)
-    input_data[feature] = st.selectbox(feature.upper(), options)
+    input_data[feature] = st.selectbox(label, options)
 
-# -------------------- PREDICTION --------------------
-if st.button("Predict"):
+# -------------------- PREDICT --------------------
+if st.button("🔍 Predict Kidney Disease"):
     try:
         # Encode categorical
         for feature in categorical_features:
             encoder = encoders[feature]
             input_data[feature] = encoder.transform([input_data[feature]])[0]
 
-        # Correct feature order (VERY IMPORTANT)
+        # Maintain EXACT order
         feature_order = numeric_features + categorical_features
 
         data = [input_data[f] for f in feature_order]
         data = np.array([data])
-
-        # DEBUG (remove later)
-        st.write("Input length:", len(data[0]))
-        st.write("Scaler expects:", scaler.n_features_in_)
 
         # Scale
         data_scaled = scaler.transform(data)
@@ -97,8 +121,10 @@ if st.button("Predict"):
         prediction = model.predict(data_scaled)[0]
 
         # Output
+        st.markdown("---")
+
         if prediction == 1:
-            st.error("⚠️ High Risk of Kidney Disease")
+            st.error("⚠️ High Risk of Kidney Disease Detected")
         else:
             st.success("✅ Low Risk (No Kidney Disease)")
 
