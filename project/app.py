@@ -1,45 +1,69 @@
-from flask import Flask, render_template, request
+import streamlit as st
 import pickle
 import numpy as np
-import os
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+# -------------------- PAGE CONFIG --------------------
+st.set_page_config(
+    page_title="ML Predictor",
+    page_icon="🔍",
+    layout="centered"
+)
 
-app = Flask(__name__)
-
-# Load models
+# -------------------- LOAD MODELS --------------------
 model = pickle.load(open('model/model.pkl', 'rb'))
 scaler = pickle.load(open('model/scaler.pkl', 'rb'))
-encoder = pickle.load(open('model/encoder.pkl', 'rb'))
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+# If you have encoder, uncomment:
+# encoder = pickle.load(open('model/encoder.pkl', 'rb'))
 
-@app.route('/predict', methods=['POST'])
-def predict():
+# -------------------- CUSTOM CSS --------------------
+st.markdown("""
+    <style>
+    .main {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+    }
+    .stButton>button {
+        background-color: #22c55e;
+        color: black;
+        font-weight: bold;
+        border-radius: 8px;
+        padding: 10px;
+    }
+    .stButton>button:hover {
+        background-color: #16a34a;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# -------------------- TITLE --------------------
+st.title("🔍 ML Prediction App")
+st.write("Enter values below to get prediction")
+
+# -------------------- INPUT FORM --------------------
+with st.form("prediction_form"):
+    col1, col2 = st.columns(2)
+
+    with col1:
+        f1 = st.number_input("Feature 1")
+        f2 = st.number_input("Feature 2")
+
+    with col2:
+        f3 = st.number_input("Feature 3")
+
+    submit = st.form_submit_button("Predict")
+
+# -------------------- PREDICTION --------------------
+if submit:
     try:
-        # Example: assume 3 inputs
-        input1 = float(request.form['feature1'])
-        input2 = float(request.form['feature2'])
-        input3 = float(request.form['feature3'])
+        data = np.array([[f1, f2, f3]])
+        data = scaler.transform(data)
 
-        data = np.array([[input1, input2, input3]])
+        prediction = model.predict(data)
 
-        # Preprocess
-        data_scaled = scaler.transform(data)
+        # If classification with encoder:
+        # prediction = encoder.inverse_transform(prediction)
 
-        # Predict
-        prediction = model.predict(data_scaled)
-
-        # Decode (if classification)
-        output = encoder.inverse_transform(prediction)[0]
-
-        return render_template('index.html', prediction_text=f'Result: {output}')
+        st.success(f"Prediction: {prediction[0]}")
 
     except Exception as e:
-        return str(e)
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        st.error(f"Error: {e}")
