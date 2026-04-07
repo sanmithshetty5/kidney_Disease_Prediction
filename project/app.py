@@ -117,16 +117,22 @@ if st.button("🔍 Predict Kidney Disease"):
         # Scale
         data_scaled = scaler.transform(data)
 
-        # Predict
+        # Predict class
         prediction = model.predict(data_scaled)[0]
 
-        # Output
+        # Predict probability
+        prob = model.predict_proba(data_scaled)[0][1]  # probability of CKD
+
         st.markdown("---")
 
+        # Show result
         if prediction == 1:
-            st.error("⚠️ High Risk of Kidney Disease Detected")
+            st.error(f"⚠️ High Risk of Kidney Disease ({prob*100:.2f}% confidence)")
         else:
-            st.success("✅ Low Risk (No Kidney Disease)")
+            st.success(f"✅ Low Risk ({(1-prob)*100:.2f}% confidence)")
+
+        # Progress bar (nice UI touch)
+        st.progress(int(prob * 100))
 
     except Exception as e:
         st.error(f"Error: {e}")
