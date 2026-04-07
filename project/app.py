@@ -10,11 +10,11 @@ st.set_page_config(
 )
 
 # -------------------- LOAD MODELS --------------------
-model = pickle.load(open('model/model.pkl', 'rb'))
-scaler = pickle.load(open('model/scaler.pkl', 'rb'))
+model = pickle.load(open('models/model.pkl', 'rb'))
+scaler = pickle.load(open('models/scaler.pkl', 'rb'))
 
 # If you have encoder, uncomment:
-# encoder = pickle.load(open('model/encoder.pkl', 'rb'))
+encoder = pickle.load(open('models/encoder.pkl', 'rb'))
 
 # -------------------- CUSTOM CSS --------------------
 st.markdown("""
